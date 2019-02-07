@@ -2,6 +2,7 @@ use std::marker::PhantomData;
 use std::ptr::NonNull;
 use std::cmp::PartialEq;
 
+#[derive(Debug, PartialEq)]
 struct LinkedList<T> {
     head: Option<NonNull<Node<T>>>,
     tail: Option<NonNull<Node<T>>>,
@@ -110,6 +111,15 @@ impl<T> LinkedList<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn new_returns_empty_list() {
+      let list: LinkedList<i32> = LinkedList::new();
+      assert!(list.eq(&LinkedList::<i32>{head: Option::None, tail: Option::None, length: 0, phantom_data: PhantomData::<i32>}));
+
+      let mut list: LinkedList<i32> = LinkedList::new();
+      assert!(list.eq(&mut LinkedList::<i32>{head: Option::None, tail: Option::None, length: 0, phantom_data: PhantomData::<i32>}));
+    }
 
     #[test]
     fn new_returns_empty_node() {
