@@ -6,7 +6,7 @@ use std::cmp::PartialEq;
 struct LinkedList<T> {
     head: Option<NonNull<Node<T>>>,
     tail: Option<NonNull<Node<T>>>,
-    phantom_data: PhantomData<T>,
+    phantom_data: PhantomData<Box<Node<T>>>,
     length: usize
 }
 
@@ -60,11 +60,11 @@ impl<T> LinkedList<T> {
         unsafe {
             node.next = self.head;
             node.prev = None;
-            let node = Some(Box::into_raw_non_null(node));
+            let node = Some(Box::leak(node).into());
 
             match self.head {
                 None => self.tail = node,
-                Some(mut head) => head.as_mut().prev = node,
+                Some(head) => (*head.as_ptr()).prev = node,
             }
             self.head = node;
             self.length += 1;
@@ -75,11 +75,11 @@ impl<T> LinkedList<T> {
         unsafe {
             node.prev = self.tail;
             node.next = None;
-            let node = Some(Box::into_raw_non_null(node));
+            let node = Some(Box::leak(node).into());
 
             match self.tail {
                 None => self.head = node,
-                Some(mut tail) => tail.as_mut().next = node,
+                Some(tail) => (*tail.as_ptr()).next = node,
             }
 
             self.tail = node;
@@ -88,11 +88,11 @@ impl<T> LinkedList<T> {
     }
 
     pub fn push_front(&mut self, value: T) {
-        self.push_front_node(box Node::new(value))
+        self.push_front_node(Box::new(Node::new(value)))
     }
 
     pub fn push_back(&mut self, value: T) {
-        self.push_back_node(box Node::new(value))
+        self.push_back_node(Box::new(Node::new(value)))
     }
 
     pub fn front(&self) -> Option<&T> {
@@ -115,10 +115,10 @@ mod tests {
     #[test]
     fn new_returns_empty_list() {
       let list: LinkedList<i32> = LinkedList::new();
-      assert!(list.eq(&LinkedList::<i32>{head: Option::None, tail: Option::None, length: 0, phantom_data: PhantomData::<i32>}));
+      assert!(list.eq(&LinkedList::<i32>{head: Option::None, tail: Option::None, length: 0, phantom_data: PhantomData::<Box<Node<i32>>>}));
 
-      let mut list: LinkedList<i32> = LinkedList::new();
-      assert!(list.eq(&mut LinkedList::<i32>{head: Option::None, tail: Option::None, length: 0, phantom_data: PhantomData::<i32>}));
+      let list: LinkedList<i32> = LinkedList::new();
+      assert!(list.eq(&mut LinkedList::<i32>{head: Option::None, tail: Option::None, length: 0, phantom_data: PhantomData::<Box<Node<i32>>>}));
     }
 
     #[test]
@@ -126,7 +126,7 @@ mod tests {
         let node: Node<i32> = Node::new(1);
         assert_eq!(node, Node{ next: None, prev: None, element: 1});
 
-        let mut node: Node<i32> = Node::new(2);
+        let node: Node<i32> = Node::new(2);
         assert_eq!(node, Node{ next: None, prev: None, element: 2});
     }
 

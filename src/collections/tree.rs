@@ -43,13 +43,13 @@ impl<T> Tree<T> where T: PartialOrd {
             Option::None => {},
             Option::Some(ref n) if n < &value => {
                 match self.left {
-                    Option::None => self.left = Option::Some(box Tree::new(value)),
+                    Option::None => self.left = Option::Some(Box::new(Tree::new(value))),
                     Option::Some(ref mut left_tree) => left_tree.add(value)
                 }
             },
             Option::Some(_n) => {
                 match self.right {
-                    Option::None => self.right = Option::Some(box Tree::new(value)),
+                    Option::None => self.right = Option::Some(Box::new(Tree::new(value))),
                     Option::Some(ref mut right_tree) => right_tree.add(value)
                 }
             }
@@ -79,43 +79,44 @@ mod tests {
 
     #[test]
     fn eq_test() {
-        assert_eq!(Tree::<i32>{right: Option::None, left: Option::None, phantom: PhantomData::<i32>, data: Option::Some(10)},
-                   Tree::<i32>{right: Option::None, left: Option::None, phantom: PhantomData::<i32>, data: Option::Some(10)});
+        let phantom = PhantomData::<i32>;
+        assert_eq!(Tree::<i32>{right: Option::None, left: Option::None, phantom, data: Option::Some(10)},
+                   Tree::<i32>{right: Option::None, left: Option::None, phantom, data: Option::Some(10)});
 
         assert_ne!(
             Tree::<i32>{
-                right: Option::Some(Box::new(Tree::<i32>{right: Option::None, left: Option::None, phantom: PhantomData::<i32>, data: Option::Some(15)})),
+                right: Option::Some(Box::new(Tree::<i32>{right: Option::None, left: Option::None, phantom, data: Option::Some(15)})),
                 left: Option::None,
-                phantom: PhantomData::<i32>,
+                phantom,
                 data: Option::Some(10)},
             Tree::<i32>{
                 right: Option::None,
                 left: Option::None,
-                phantom: PhantomData::<i32>,
+                phantom,
                 data: Option::Some(10)});
 
         assert_ne!(
             Tree::<i32>{
-                right: Option::Some(Box::new(Tree::<i32>{right: Option::None, left: Option::None, phantom: PhantomData::<i32>, data: Option::Some(15)})),
+                right: Option::Some(Box::new(Tree::<i32>{right: Option::None, left: Option::None, phantom, data: Option::Some(15)})),
                 left: Option::None,
-                phantom: PhantomData::<i32>,
+                phantom,
                 data: Option::Some(10)},
             Tree::<i32>{
-                right: Option::Some(Box::new(Tree::<i32>{right: Option::None, left: Option::None, phantom: PhantomData::<i32>, data: Option::Some(12)})),
+                right: Option::Some(Box::new(Tree::<i32>{right: Option::None, left: Option::None, phantom, data: Option::Some(12)})),
                 left: Option::None,
-                phantom: PhantomData::<i32>,
+                phantom,
                 data: Option::Some(10)});
 
         assert_eq!(
             Tree::<i32>{
-                right: Option::Some(Box::new(Tree::<i32>{right: Option::None, left: Option::None, phantom: PhantomData::<i32>, data: Option::Some(15)})),
+                right: Option::Some(Box::new(Tree::<i32>{right: Option::None, left: Option::None, phantom, data: Option::Some(15)})),
                 left: Option::None,
-                phantom: PhantomData::<i32>,
+                phantom,
                 data: Option::Some(10)},
             Tree::<i32>{
-                right: Option::Some(Box::new(Tree::<i32>{right: Option::None, left: Option::None, phantom: PhantomData::<i32>, data: Option::Some(15)})),
+                right: Option::Some(Box::new(Tree::<i32>{right: Option::None, left: Option::None, phantom, data: Option::Some(15)})),
                 left: Option::None,
-                phantom: PhantomData::<i32>,
+                phantom,
                 data: Option::Some(10)});
     }
 
