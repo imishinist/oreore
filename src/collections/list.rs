@@ -115,10 +115,10 @@ mod tests {
     #[test]
     fn new_returns_empty_list() {
       let list: LinkedList<i32> = LinkedList::new();
-      assert!(list.eq(&LinkedList::<i32>{head: Option::None, tail: Option::None, length: 0, phantom_data: PhantomData::<Box<Node<i32>>>}));
+      assert!(list.eq(&LinkedList::<i32>{head: None, tail: None, length: 0, phantom_data: PhantomData::<Box<Node<i32>>>}));
 
       let list: LinkedList<i32> = LinkedList::new();
-      assert!(list.eq(&mut LinkedList::<i32>{head: Option::None, tail: Option::None, length: 0, phantom_data: PhantomData::<Box<Node<i32>>>}));
+      assert!(list.eq(&mut LinkedList::<i32>{head: None, tail: None, length: 0, phantom_data: PhantomData::<Box<Node<i32>>>}));
     }
 
     #[test]
