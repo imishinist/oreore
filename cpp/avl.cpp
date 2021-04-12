@@ -30,7 +30,7 @@ public:
   void insert(int key) { root = insert_with_node(root, key); }
   void del(int key) { root = delete_node(root, key); }
 
-  void display(Order order = Order::Pre) {
+  void display(Order order = Order::Post) {
     switch (order) {
     case Order::Pre: {
       cout << "pre-order:";
@@ -68,15 +68,15 @@ private:
   }
   void display_in(Node<T> *node) {
     if (node != nullptr) {
-      display_pre(node->left);
+      display_in(node->left);
       display_node(node);
-      display_pre(node->right);
+      display_in(node->right);
     }
   }
   void display_post(Node<T> *node) {
     if (node != nullptr) {
-      display_pre(node->left);
-      display_pre(node->right);
+      display_post(node->left);
+      display_post(node->right);
       display_node(node);
     }
   }
