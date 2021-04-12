@@ -4,15 +4,18 @@
 
 using namespace std;
 
-class Node {
+template <class T> class Tree;
+
+template <class T> class Node {
 private:
-  int key, height;
+  T key;
+  int height;
   Node *left, *right;
 
 public:
-  Node(int key) : key(key), height(1), left(nullptr), right(nullptr) {}
+  Node(T key) : key(key), height(1), left(nullptr), right(nullptr) {}
 
-  friend class Tree;
+  friend class Tree<T>;
 };
 
 enum class Order {
@@ -21,7 +24,7 @@ enum class Order {
   Post = 2,
 };
 
-class Tree {
+template <class T> class Tree {
 public:
   Tree() : root(nullptr) {}
   void insert(int key) { root = insert_with_node(root, key); }
@@ -49,28 +52,28 @@ public:
   }
 
 private:
-  void display_node(Node *node) {
+  void display_node(Node<T> *node) {
     auto key = node->key;
     auto leftk = node->left ? node->left->key : -1;
     auto rightk = node->right ? node->right->key : -1;
 
     cout << " (key=" << key << ",left=" << leftk << ",right=" << rightk << ")";
   }
-  void display_pre(Node *node) {
+  void display_pre(Node<T> *node) {
     if (node != nullptr) {
       display_node(node);
       display_pre(node->left);
       display_pre(node->right);
     }
   }
-  void display_in(Node *node) {
+  void display_in(Node<T> *node) {
     if (node != nullptr) {
       display_pre(node->left);
       display_node(node);
       display_pre(node->right);
     }
   }
-  void display_post(Node *node) {
+  void display_post(Node<T> *node) {
     if (node != nullptr) {
       display_pre(node->left);
       display_pre(node->right);
@@ -78,20 +81,20 @@ private:
     }
   }
 
-  inline int height(Node *n) {
+  inline int height(Node<T> *n) {
     if (n == nullptr)
       return 0;
     return n->height;
   }
 
   inline int max(int a, int b) { return (a > b) ? a : b; }
-  inline int max_height(Node *x) {
+  inline int max_height(Node<T> *x) {
     return max(height(x->left), height(x->right));
   }
 
-  Node *right_rotate(Node *y) {
-    Node *x = y->left;
-    Node *T2 = x->right;
+  Node<T> *right_rotate(Node<T> *y) {
+    auto *x = y->left;
+    auto *T2 = x->right;
 
     x->right = y;
     y->left = T2;
@@ -101,9 +104,9 @@ private:
     return x;
   }
 
-  Node *left_rotate(Node *x) {
-    Node *y = x->right;
-    Node *T2 = y->left;
+  Node<T> *left_rotate(Node<T> *x) {
+    auto *y = x->right;
+    auto *T2 = y->left;
 
     y->left = x;
     x->right = T2;
@@ -113,13 +116,13 @@ private:
     return y;
   }
 
-  int get_balance(Node *n) {
+  int get_balance(Node<T> *n) {
     if (n == nullptr)
       return 0;
     return height(n->left) - height(n->right);
   }
 
-  Node *insert_with_node(Node *node, int key) {
+  Node<T> *insert_with_node(Node<T> *node, T key) {
     if (node == nullptr)
       return new Node(key);
 
@@ -156,14 +159,14 @@ private:
     return node;
   }
 
-  Node *min_value_node(Node *node) {
-    Node *current = node;
+  Node<T> *min_value_node(Node<T> *node) {
+    auto current = node;
     while (current->left != nullptr)
       current = current->left;
     return current;
   }
 
-  Node *delete_node(Node *root, int key) {
+  Node<T> *delete_node(Node<T> *root, T key) {
     if (root == nullptr)
       return root;
 
@@ -173,7 +176,7 @@ private:
       root->right = delete_node(root->right, key);
     else {
       if ((root->left == nullptr) || (root->right == nullptr)) {
-        Node *temp = root->left ? root->left : root->right;
+        auto temp = root->left ? root->left : root->right;
         if (temp == nullptr) {
           temp = root;
           root = nullptr;
@@ -181,7 +184,7 @@ private:
           *root = *temp;
         free(temp);
       } else {
-        Node *temp = min_value_node(root->right);
+        auto temp = min_value_node(root->right);
         root->key = temp->key;
         root->right = delete_node(root->right, temp->key);
       }
@@ -211,11 +214,11 @@ private:
     return root;
   }
 
-  Node *root;
+  Node<T> *root;
 };
 
 int main() {
-  auto tree = Tree();
+  auto tree = Tree<int>();
   tree.insert(10);
   tree.display();
   tree.insert(20);
