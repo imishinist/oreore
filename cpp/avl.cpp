@@ -30,7 +30,7 @@ public:
   void insert(int key) { root = insert_with_node(root, key); }
   void del(int key) { root = delete_node(root, key); }
 
-  void display(Order order = Order::Post) {
+  void display(Order order = Order::Pre) {
     switch (order) {
     case Order::Pre: {
       cout << "pre-order:";

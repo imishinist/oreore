@@ -1,4 +1,5 @@
-use std::cmp::max;
+use crate::collections::avl::Balance::{Balanced, LeftLean, RightLean};
+use std::cmp::{max, Ordering};
 
 #[derive(Debug, PartialEq)]
 struct Node<T> {
@@ -27,12 +28,10 @@ impl From<Balance> for i32 {
 
 impl From<i32> for Balance {
     fn from(i: i32) -> Self {
-        if i == 0 {
-            Balance::Balanced
-        } else if i > 0 {
-            Balance::LeftLean(i as usize)
-        } else {
-            Balance::RightLean(-i as usize)
+        match i.cmp(&0) {
+            Ordering::Equal => Balanced,
+            Ordering::Greater => LeftLean(i as usize),
+            Ordering::Less => RightLean(-i as usize),
         }
     }
 }
@@ -46,6 +45,18 @@ impl<T> Node<T> {
             right: None,
         }
     }
+
+    fn key(&self) -> &T {
+        self.key.as_ref().unwrap()
+    }
+
+    fn left_key(&self) -> Option<&T> {
+        self.left.as_ref().map(|f| f.key())
+    }
+
+    fn right_key(&self) -> Option<&T> {
+        self.right.as_ref().map(|f| f.key())
+    }
 }
 
 #[inline]
@@ -57,55 +68,182 @@ fn height<T>(node: &Option<Box<Node<T>>>) -> usize {
 }
 
 #[inline]
-fn max_height<T>(node: &Box<Node<T>>) -> usize {
+fn max_height<T>(node: &Node<T>) -> usize {
     max(height(&node.left), height(&node.right))
 }
 
 #[inline]
-fn get_balance<T>(node: &Option<Box<Node<T>>>) -> Balance {
-    match node {
-        Some(n) => {
-            let b = height(&n.left) as i32 - height(&n.right) as i32;
-            b.into()
+fn get_balance<T>(node: &Node<T>) -> Balance {
+    let b = height(&node.left) as i32 - height(&node.right) as i32;
+    b.into()
+}
+
+fn right_rotate<T>(mut y: Box<Node<T>>) -> Box<Node<T>> {
+    let mut x = y.left.unwrap();
+    y.left = x.right.take();
+    y.height = max_height(&y) + 1;
+
+    x.right = Some(y);
+    x.height = max_height(&x) + 1;
+
+    x
+}
+
+fn left_rotate<T>(mut x: Box<Node<T>>) -> Box<Node<T>> {
+    let mut y = x.right.unwrap();
+    x.right = y.left.take();
+    x.height = max_height(&x) + 1;
+
+    y.left = Some(x);
+    y.height = max_height(&y) + 1;
+
+    y
+}
+
+fn insert_with_node<T>(node: &mut Option<Box<Node<T>>>, key: T) -> Box<Node<T>>
+where
+    T: PartialOrd + Clone,
+{
+    if node.is_none() {
+        return Box::new(Node::new(key));
+    }
+    let mut node = node.take().unwrap();
+
+    match key.partial_cmp(node.key()) {
+        None => return node,
+        Some(Ordering::Less) => node.left = Some(insert_with_node(&mut node.left, key.clone())),
+        Some(Ordering::Greater) => {
+            node.right = Some(insert_with_node(&mut node.right, key.clone()))
         }
-        None => Balance::Balanced,
+        Some(Ordering::Equal) => return node,
+    }
+    node.height = 1 + max_height(&node);
+
+    let balance = get_balance(&node);
+
+    match balance {
+        // left left
+        Balance::LeftLean(n) if n > 1 && &key < node.left_key().unwrap() => right_rotate(node),
+        // left right
+        Balance::LeftLean(n) if n > 1 && &key > node.right_key().unwrap() => {
+            node.left = Some(left_rotate(node.left.unwrap()));
+            right_rotate(node)
+        }
+        // right right
+        Balance::RightLean(n) if n > 1 && &key > node.right_key().unwrap() => left_rotate(node),
+        // right left
+        Balance::RightLean(n) if n > 1 && &key < node.right_key().unwrap() => {
+            node.right = Some(right_rotate(node.right.unwrap()));
+            left_rotate(node)
+        }
+        _ => node,
     }
 }
 
-fn right_rotate<T>(node: &Box<Node<T>>) -> Box<Node<T>> {
+#[allow(unused_variables)]
+fn min_value_node<T>(node: &Node<T>) -> Box<Node<T>> {
     todo!()
 }
 
-fn left_rotate<T>(node: &Box<Node<T>>) -> Box<Node<T>> {
-    todo!()
-}
-
-fn insert_with_node<T>(node: &Option<Box<Node<T>>>, key: T) -> Box<Node<T>> {
-    todo!()
-}
-
-fn min_value_node<T>(node: &Box<Node<T>>) -> Box<Node<T>> {
-    todo!()
-}
-
+#[allow(unused_variables)]
 fn delete_node<T>(node: &Option<Box<Node<T>>>, key: T) -> Box<Node<T>> {
     todo!()
 }
 
+#[derive(Debug, Default, PartialEq)]
 pub struct Tree<T> {
     root: Option<Box<Node<T>>>,
 }
 
-impl<T> Tree<T> {
+impl<T: PartialOrd + Clone> Tree<T> {
     pub fn new() -> Self {
         Tree { root: None }
     }
 
     pub fn insert(&mut self, value: T) {
-        self.root = Some(insert_with_node(&self.root, value));
+        self.root = Some(insert_with_node(&mut self.root, value));
     }
 
     pub fn delete(&mut self, value: T) {
         self.root = Some(delete_node(&self.root, value));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::collections::avl::{Node, Tree};
+
+    macro_rules! bin_tree {
+        ( key: $key:expr, height: $height:expr, left: $left:expr, right: $right:expr $(,)? ) => {
+            Node {
+                key: Some($key),
+                height: $height,
+                left: Some(Box::new($left)),
+                right: Some(Box::new($right)),
+            }
+        };
+        ( key: $key:expr, height: $height:expr, right: $right:expr $(,)? ) => {
+            Node {
+                key: Some($key),
+                height: $height,
+                left: None,
+                right: Some(Box::new($right)),
+            }
+        };
+        ( key: $key:expr, height: $height:expr, left: $left:expr $(,)? ) => {
+            Node {
+                key: Some($key),
+                height: $height,
+                left: Some(Box::new($left)),
+                right: None,
+            }
+        };
+        (key: $key:expr, height: $height:expr $(,)? ) => {
+            Node {
+                key: Some($key),
+                height: $height,
+                left: None,
+                right: None,
+            }
+        };
+    }
+
+    #[test]
+    fn test_insert() {
+        let mut tree = Tree::new();
+        tree.insert(10);
+        tree.insert(20);
+        tree.insert(30);
+        tree.insert(40);
+        tree.insert(50);
+        tree.insert(25);
+
+        let root = Some(Box::new(bin_tree! {
+            key: 30,
+            height: 3,
+            left: bin_tree! {
+                key: 20,
+                height: 2,
+                left: bin_tree! {
+                    key: 10,
+                    height: 1,
+                },
+                right: bin_tree! {
+                    key: 25,
+                    height: 1,
+                }
+            },
+            right: bin_tree! {
+                key: 40,
+                height: 2,
+                right: bin_tree! {
+                    key: 50,
+                    height: 1,
+                }
+            }
+        }));
+        let expected = Tree { root };
+
+        assert_eq!(tree, expected);
     }
 }
