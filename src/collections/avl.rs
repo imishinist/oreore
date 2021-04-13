@@ -10,6 +10,7 @@ struct Node<T> {
     right: Option<Box<Node<T>>>,
 }
 
+#[derive(Debug, PartialEq)]
 enum Balance {
     LeftLean(usize),
     RightLean(usize),
@@ -57,6 +58,10 @@ impl<T> Node<T> {
     fn right_key(&self) -> Option<&T> {
         self.right.as_ref().map(|f| f.key())
     }
+
+    fn incr_height(&mut self) {
+        self.height = max_height(&self) + 1;
+    }
 }
 
 #[inline]
@@ -74,17 +79,16 @@ fn max_height<T>(node: &Node<T>) -> usize {
 
 #[inline]
 fn get_balance<T>(node: &Node<T>) -> Balance {
-    let b = height(&node.left) as i32 - height(&node.right) as i32;
-    b.into()
+    (height(&node.left) as i32 - height(&node.right) as i32).into()
 }
 
 fn right_rotate<T>(mut y: Box<Node<T>>) -> Box<Node<T>> {
     let mut x = y.left.unwrap();
     y.left = x.right.take();
-    y.height = max_height(&y) + 1;
+    y.incr_height();
 
     x.right = Some(y);
-    x.height = max_height(&x) + 1;
+    x.incr_height();
 
     x
 }
@@ -117,11 +121,9 @@ where
         }
         Some(Ordering::Equal) => return node,
     }
-    node.height = 1 + max_height(&node);
+    node.incr_height();
 
-    let balance = get_balance(&node);
-
-    match balance {
+    match get_balance(&node) {
         // left left
         Balance::LeftLean(n) if n > 1 && &key < node.left_key().unwrap() => right_rotate(node),
         // left right
@@ -171,7 +173,8 @@ impl<T: PartialOrd + Clone> Tree<T> {
 
 #[cfg(test)]
 mod tests {
-    use crate::collections::avl::{Node, Tree};
+    use crate::collections::avl::Balance::{Balanced, LeftLean, RightLean};
+    use crate::collections::avl::{Balance, Node, Tree};
 
     macro_rules! bin_tree {
         ( key: $key:expr, height: $height:expr, left: $left:expr, right: $right:expr $(,)? ) => {
@@ -206,6 +209,20 @@ mod tests {
                 right: None,
             }
         };
+    }
+
+    #[test]
+    fn i32_to_balance_test() {
+        assert_eq!(Balance::from(0), Balanced);
+        assert_eq!(Balance::from(1), LeftLean(1));
+        assert_eq!(Balance::from(-1), RightLean(1));
+    }
+
+    #[test]
+    fn balance_to_i32_test() {
+        assert_eq!(i32::from(Balanced), 0);
+        assert_eq!(i32::from(LeftLean(1)), 1);
+        assert_eq!(i32::from(RightLean(1)), -1);
     }
 
     #[test]
