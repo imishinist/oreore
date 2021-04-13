@@ -1,13 +1,13 @@
+use std::cmp::PartialEq;
 use std::marker::PhantomData;
 use std::ptr::NonNull;
-use std::cmp::PartialEq;
 
 #[derive(Debug, PartialEq)]
 struct LinkedList<T> {
     head: Option<NonNull<Node<T>>>,
     tail: Option<NonNull<Node<T>>>,
     phantom_data: PhantomData<Box<Node<T>>>,
-    length: usize
+    length: usize,
 }
 
 #[derive(Debug)]
@@ -32,7 +32,7 @@ impl<T> Node<T> {
         Node {
             next: None,
             prev: None,
-            element: value
+            element: value,
         }
     }
 
@@ -42,7 +42,6 @@ impl<T> Node<T> {
 }
 
 impl<T> LinkedList<T> {
-
     fn new() -> Self {
         LinkedList {
             head: None,
@@ -96,15 +95,11 @@ impl<T> LinkedList<T> {
     }
 
     pub fn front(&self) -> Option<&T> {
-        unsafe {
-            self.head.as_ref().map(|node| &node.as_ref().element )
-        }
+        unsafe { self.head.as_ref().map(|node| &node.as_ref().element) }
     }
 
     pub fn back(&self) -> Option<&T> {
-        unsafe {
-            self.tail.as_ref().map(|node| &node.as_ref().element )
-        }
+        unsafe { self.tail.as_ref().map(|node| &node.as_ref().element) }
     }
 }
 
@@ -114,20 +109,44 @@ mod tests {
 
     #[test]
     fn new_returns_empty_list() {
-      let list: LinkedList<i32> = LinkedList::new();
-      assert!(list.eq(&LinkedList::<i32>{head: None, tail: None, length: 0, phantom_data: PhantomData::<Box<Node<i32>>>}));
+        let list: LinkedList<i32> = LinkedList::new();
+        assert!(list.eq(&LinkedList::<i32> {
+            head: None,
+            tail: None,
+            length: 0,
+            phantom_data: PhantomData::<Box<Node<i32>>>
+        }));
 
-      let list: LinkedList<i32> = LinkedList::new();
-      assert!(list.eq(&mut LinkedList::<i32>{head: None, tail: None, length: 0, phantom_data: PhantomData::<Box<Node<i32>>>}));
+        let list: LinkedList<i32> = LinkedList::new();
+        assert!(list.eq(&mut LinkedList::<i32> {
+            head: None,
+            tail: None,
+            length: 0,
+            phantom_data: PhantomData::<Box<Node<i32>>>
+        }));
     }
 
     #[test]
     fn new_returns_empty_node() {
         let node: Node<i32> = Node::new(1);
-        assert_eq!(node, Node{ next: None, prev: None, element: 1});
+        assert_eq!(
+            node,
+            Node {
+                next: None,
+                prev: None,
+                element: 1
+            }
+        );
 
         let node: Node<i32> = Node::new(2);
-        assert_eq!(node, Node{ next: None, prev: None, element: 2});
+        assert_eq!(
+            node,
+            Node {
+                next: None,
+                prev: None,
+                element: 2
+            }
+        );
     }
 
     #[test]
@@ -147,4 +166,3 @@ mod tests {
         assert_eq!(list.len(), 3);
     }
 }
-
