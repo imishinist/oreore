@@ -216,20 +216,20 @@ fn delete_node<T: Ord + Clone>(node: &mut Option<Box<Node<T>>>, key: T) -> Optio
 
     let balance = get_balance(&node);
     match balance {
-        Balance::LeftLean(n) if n > 1 && !get_balance_opt(&node.left).is_right_lean() => {
-            Some(right_rotate(node))
-        }
-        Balance::LeftLean(n) if n > 1 && get_balance_opt(&node.left).is_right_lean() => {
-            node.left = Some(left_rotate(node.left.unwrap()));
-            Some(right_rotate(node))
-        }
-        Balance::RightLean(n) if n > 1 && !get_balance_opt(&node.right).is_left_lean() => {
-            Some(left_rotate(node))
-        }
-        Balance::RightLean(n) if n > 1 && get_balance_opt(&node.right).is_left_lean() => {
-            node.right = Some(right_rotate(node.right.unwrap()));
-            Some(left_rotate(node))
-        }
+        Balance::LeftLean(n) if n > 1 => match get_balance_opt(&node.left) {
+            Balance::RightLean(_) => {
+                node.left = Some(left_rotate(node.left.unwrap()));
+                Some(right_rotate(node))
+            }
+            _ => Some(right_rotate(node)),
+        },
+        Balance::RightLean(n) if n > 1 => match get_balance_opt(&node.right) {
+            Balance::LeftLean(_) => {
+                node.right = Some(right_rotate(node.right.unwrap()));
+                Some(left_rotate(node))
+            }
+            _ => Some(left_rotate(node)),
+        },
         _ => Some(node),
     }
 }
