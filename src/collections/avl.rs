@@ -74,14 +74,6 @@ impl<T> Node<T> {
         self.right.as_ref().map(|f| f.key())
     }
 
-    fn left_as_mut(&mut self) -> Option<&mut Box<Node<T>>> {
-        self.left.as_mut()
-    }
-
-    fn right_as_mut(&mut self) -> Option<&mut Box<Node<T>>> {
-        self.right.as_mut()
-    }
-
     fn update_height(&mut self) {
         self.height = max_height(&self) + 1;
     }
@@ -169,7 +161,6 @@ where
     }
 }
 
-#[allow(unused_variables)]
 fn min_value_node<T: Clone>(node: &Node<T>) -> &T {
     let mut cursor = node;
     while let Some(ref c) = cursor.left {
@@ -178,7 +169,6 @@ fn min_value_node<T: Clone>(node: &Node<T>) -> &T {
     cursor.key()
 }
 
-#[allow(unused_variables)]
 fn delete_node<T: Ord + Clone>(node: &mut Option<Box<Node<T>>>, key: T) -> Option<Box<Node<T>>> {
     if node.is_none() {
         return None;
@@ -199,7 +189,7 @@ fn delete_node<T: Ord + Clone>(node: &mut Option<Box<Node<T>>>, key: T) -> Optio
                     node.key = Some(left.key().clone());
                     node.left = None;
                 }
-                (None, Some(n)) => {
+                (None, Some(_)) => {
                     let right = node.right.unwrap();
                     node.key = Some(right.key().clone());
                     node.right = None;
